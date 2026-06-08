@@ -7,6 +7,7 @@ import { buildPostUrl, fetchArticleComments, fetchTaskPostBySlug, fetchTaskPosts
 import { getTaskConfig, SITE_CONFIG, type TaskKey } from '@/lib/site-config'
 import type { SitePost } from '@/lib/site-connector'
 import { EditableSiteShell } from '@/editable/shell/EditableSiteShell'
+import { ShareButton } from '@/editable/components/ShareButton'
 import { getVisualPreset, visualSystem } from '@/editable/theme/visual-system'
 
 export const revalidate = 3
@@ -126,7 +127,7 @@ export function TaskDetailView({ task, post, related, comments = [] }: { task: T
 function BackLink({ task }: { task: TaskKey }) {
   const taskConfig = getTaskConfig(task)
   return (
-    <Link href={taskConfig?.route || '/'} className="inline-flex items-center gap-2 rounded-full border border-[var(--editable-border)] bg-white/70 px-4 py-2 text-sm font-black">
+    <Link href={taskConfig?.route || '/'} className="inline-flex items-center gap-2 rounded-full border border-[var(--editable-border)] bg-white/85 px-4 py-2 text-sm font-black text-[var(--detail-text)] shadow-sm">
       <ArrowLeft className="h-4 w-4" /> Back to {taskConfig?.label || 'posts'}
     </Link>
   )
@@ -265,27 +266,47 @@ function BookmarkDetail({ post, related }: { post: SitePost; related: SitePost[]
 
 function PdfDetail({ post, related }: { post: SitePost; related: SitePost[] }) {
   const fileUrl = getField(post, ['fileUrl', 'pdfUrl', 'documentUrl', 'url'])
+  const images = getImages(post)
+  const category = categoryOf(post, 'PDF resource')
   return (
-    <section className="mx-auto grid max-w-[var(--editable-container)] gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8 lg:py-16">
-      <article className="rounded-[2.7rem] border border-[var(--editable-border)] bg-white p-6 shadow-[0_30px_90px_rgba(15,23,42,0.08)] sm:p-9">
-        <BackLink task="pdf" />
-        <div className="mt-8 grid gap-6 sm:grid-cols-[120px_1fr]">
-          <div className="flex h-28 w-28 items-center justify-center rounded-[1.8rem] bg-[var(--detail-text)] text-[var(--detail-bg)]"><FileText className="h-12 w-12" /></div>
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.28em] text-[var(--detail-accent)]">PDF resource</p>
-            <h1 className="mt-3 text-4xl font-black leading-[0.98] tracking-[-0.07em] sm:text-6xl">{post.title}</h1>
+    <section className="mx-auto grid max-w-[var(--editable-container)] gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:px-8 lg:py-16">
+      <article className="overflow-hidden rounded-[2.7rem] border border-[var(--editable-border)] bg-white shadow-[0_30px_90px_rgba(98,43,20,0.12)]">
+        <div className="relative bg-[#241109] p-6 text-[#fff4dc] sm:p-9">
+          <div className="pointer-events-none absolute inset-0 opacity-45 [background-image:linear-gradient(rgba(228,214,169,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(228,214,169,0.12)_1px,transparent_1px)] [background-size:36px_36px]" />
+          {images[0] ? <img src={images[0]} alt="" className="absolute inset-0 h-full w-full object-cover opacity-24" /> : null}
+          <div className="relative">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <BackLink task="pdf" />
+              <ShareButton
+                title={post.title}
+                className="inline-flex items-center gap-2 rounded-full border border-[#E4D6A9]/25 bg-[#E4D6A9] px-4 py-2 text-sm font-black text-[#241109] shadow-[0_14px_32px_rgba(0,0,0,0.16)] transition hover:-translate-y-0.5"
+              />
+            </div>
+            <div className="mt-10 grid gap-6 sm:grid-cols-[120px_1fr]">
+              <div className="flex h-28 w-28 items-center justify-center rounded-[1.8rem] border border-[#E4D6A9]/30 bg-[#E4D6A9]/15 text-[#E4D6A9]"><FileText className="h-12 w-12" /></div>
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.28em] text-[#E4D6A9]">{category}</p>
+                <h1 className="mt-3 font-serif text-5xl font-semibold leading-[0.92] tracking-[-0.07em] sm:text-7xl">{post.title}</h1>
+                
+              </div>
+            </div>
           </div>
         </div>
-        <BodyContent post={post} />
-        {fileUrl ? (
-          <div className="mt-8 overflow-hidden rounded-[2rem] border border-[var(--editable-border)] bg-[var(--detail-bg)]">
-            <div className="flex items-center justify-between gap-3 border-b border-[var(--editable-border)] bg-white p-4">
-              <span className="text-sm font-black">Document preview</span>
-              <Link href={fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[var(--detail-text)] px-4 py-2 text-xs font-black text-[var(--detail-bg)]">Download <Download className="h-4 w-4" /></Link>
+        <div className="p-6 sm:p-9">
+          {fileUrl ? (
+            <div className="mt-8 overflow-hidden rounded-[2rem] border border-[var(--editable-border)] bg-[var(--detail-bg)]">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--editable-border)] bg-[#fff8e8] p-4">
+                <span className="text-sm font-black">Document preview</span>
+                <Link href={fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[var(--detail-text)] px-4 py-2 text-xs font-black text-[var(--detail-bg)]">Download <Download className="h-4 w-4" /></Link>
+              </div>
+              <iframe src={`${fileUrl}#toolbar=0&navpanes=0&scrollbar=0`} title={post.title} className="h-[78vh] w-full" />
             </div>
-            <iframe src={`${fileUrl}#toolbar=0&navpanes=0&scrollbar=0`} title={post.title} className="h-[78vh] w-full" />
-          </div>
-        ) : null}
+          ) : (
+            <div className="mt-8 rounded-[2rem] border border-dashed border-[var(--editable-border)] bg-[#E4D6A9]/30 p-6">
+              <p className="text-sm font-bold opacity-70">No document file is attached yet. The resource details remain available above.</p>
+            </div>
+          )}
+        </div>
       </article>
       <RelatedPanel task="pdf" post={post} related={related} />
     </section>
@@ -387,6 +408,11 @@ function RelatedPanel({ task, post, related, compact = false }: { task: TaskKey;
             <p className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> Site: {SITE_CONFIG.name}</p>
             {post.publishedAt ? <p>Published: {new Date(post.publishedAt).toLocaleDateString()}</p> : null}
           </div>
+          <ShareButton
+            title={post.title}
+            label="Share this page"
+            className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#622B14] px-4 py-3 text-sm font-black text-[#fff4dc] shadow-[0_14px_34px_rgba(98,43,20,0.18)] transition hover:-translate-y-0.5"
+          />
         </div>
       ) : null}
       {related.length ? (
